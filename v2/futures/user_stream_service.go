@@ -11,22 +11,23 @@ type StartUserStreamService struct {
 }
 
 // Do send request
-func (s *StartUserStreamService) Do(ctx context.Context, opts ...RequestOption) (listenKey string, err error) {
+func (s *StartUserStreamService) Do(ctx context.Context, opts ...RequestOption) (listenKey string, usedWeight1m string, err error) {
 	r := &request{
 		method:   http.MethodPost,
 		endpoint: "/fapi/v1/listenKey",
 		secType:  secTypeSigned,
 	}
-	data, _, err := s.c.callAPI(ctx, r, opts...)
+	data, header, err := s.c.callAPI(ctx, r, opts...)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 	j, err := newJSON(data)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 	listenKey = j.Get("listenKey").MustString()
-	return listenKey, nil
+	usedWeight1m = header.Get("X-MBX-USED-WEIGHT-1M")
+	return listenKey, usedWeight1m, nil
 }
 
 // KeepaliveUserStreamService update listen key
